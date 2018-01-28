@@ -1,11 +1,9 @@
 
 #!/bin/bash
-#Date:20170227
-#Author:HuangJianpeng
-#Mail:huangjianpeng132@gmail.com
-#Description:Script only for bigip ltm checking,
-#Used for F5 NetWorks bigip 9.1.1/9.1.2/9.3.0/9.3.7/9.4.5/9.4.8/10.2.3/10.2.4/11.4.1/11.5.4 or later
-#set -e
+#DATE 20170227
+#AUTHOR Huang
+#DESCRIPTION:Script only for bigip ltm checking
+set -e
 green="\033[32m"
 red="\033[31m"
 close="\033[0m"
@@ -13,10 +11,10 @@ row() {
 	for i in $(seq 0 100);do echo -en "${green}-${close}";done;echo
 }
 #define bigip soft version and hardware types
-# bos911="9.1.1";bos930="9.3.0";bos931="9.3.1";bos945="9.4.5";bos948="9.4.8";bos115="11.5.4"
-# bhw1500="1500";bhw3400="3400";bhw6400="6400";
-# bhw1600="1600";bhw3600="3600";bhw6900="6900";bhw8900="8900"
-# bhw2000="2000"
+bos911="9.1.1";bos930="9.3.0";bos931="9.3.1";bos945="9.4.5";bos948="9.4.8";bos115="11.5.4"
+bhw1500="1500";bhw3400="3400";bhw6400="6400";
+bhw1600="1600";bhw3600="3600";bhw6900="6900";bhw8900="8900"
+bhw2000="2000"
 
 function Tmm_cpu() 
 {
@@ -194,7 +192,7 @@ function Throughput()
 	ser_th_byte=$((($ser_byte_in2-$ser_byte_in1)+($ser_byte_out2-$ser_bype_out1)))
 	cli_throughput=$( echo "$cli_th_byte"|awk '{printf "%.2f",$1*0.8/1000}')
 	ser_throughput=$( echo "$ser_th_byte"|awk '{printf "%.2f",$1*0.8/1000}')
-	echo "Client_throughput=$cli_throughput k/s ,Server_throughput=$ser_throughput k/s"
+	echo "client_throughput=$cli_throughput k/s ,server_throughput=$ser_throughput k/s"
 }
 
 function POWER_SUPPLY()
@@ -326,7 +324,7 @@ function CPU_TEMPERATURE()
 			echo "BIGIP VERSION is: $soft_ver"
 			exit 97
 	fi
-	echo "CPU_TEMPERATURE_is:$cpu_tmp"
+	echo "CPU_TEMPERATURE is:$cpu_tmp"
  }
 function UPTIME()
 {
@@ -336,14 +334,15 @@ function UPTIME()
 	if [ -n "$(echo $ut |grep :)" ]; then
 
 		ut=$(echo $ut|awk -F :  '{print $1}')
-		echo "UPTIME_is: $ut hours"
+		echo "UPTIME is:$ut hours"
 	else
-		echo "UPTIME_is: $ut days"
+		echo "UPTIME is:$ut days"
 	fi
+	
 }
 function SYS_date()
 {
-	echo "Current_date_time is: $(date "+%F %H:%M")"
+	echo $(date "+%F %H:%M")
 }
 function log_ltm()
 {
@@ -533,8 +532,7 @@ function DEV_Acc_control_tmsh()
 		sshd_ip='All'
 	fi
 
-	echo -e "HTTP_all_addr: $(echo $httpd_ip)"
-	echo -e "SSH_all_addr: $(echo $sshd_ip)"
+	echo -e "HTTP_all:$httpd_ip\nSSH_all:$sshd_ip"
 }
 
 function NET_failover()
@@ -629,7 +627,7 @@ function DEV_sn()
 		SN=$(b platform |grep -i -E "(Chassis:|Chassis   serial)" | awk '{print $4}')
 	fi
 
-	echo "Device_Serial_Number: $SN"
+	echo "Device Serial Number:$SN"
 
 }
 #HOSTNAME
@@ -660,7 +658,7 @@ function DEV_ip()
 	rand=$(($RANDOM%$len_arr))
 	#get a random ip
 	dev_ip=${IP_arr[rand]}
-	echo "DEVICE_IP: $dev_ip"
+	echo "DEVICE IP:$dev_ip"
 }
 
 #bigip software version info
@@ -672,6 +670,15 @@ function SOFT_VER()
 	OS_HF=$(grep -i Edition /VERSION |awk '{print $NF}')
 	echo "$OS_VERSION $OS_HF"
 }
+
+echo "Module_type: $(Module_type)"
+DEV_sn
+DEV_hn
+DEV_ip
+echo "BIGIP $(SOFT_VER)"
+echo "SUPPORT ENGINEER:Jianpeng Huang"
+echo "SUPPORT DATE:$(date +%Y/%m/%d)"
+echo "LOCATION of SUPPORT:XiBianMen"
 #checking the status of the cluster configsync
 function CONF_STAT()
 {
@@ -690,6 +697,9 @@ function CONF_STAT()
 	echo "$code"
 
 }
+
+CONF_STAT
+
 #checking the device master or slave status
 function DEV_HA_STAT() 
 
@@ -706,114 +716,24 @@ function DEV_HA_STAT()
 	
 	echo "$stat_code"
 }
-row
-echo "Module_type: $(Module_type)"
-row
-DEV_sn
-row
-DEV_hn
-row
-DEV_ip
-row
-echo "BIGIP_Version :$(SOFT_VER)"
-row
-echo "SUPPORT_ENGINEER: Jianpeng Huang"
-row
-echo "SUPPORT_DATE: $(date +%Y/%m/%d)"
-row
-echo "LOCATION_of_SUPPORT: XiBianMen"
-row
-echo -n "Config_sync_status: ";CONF_STAT
-row
-echo "BIGIP_HA_STAUTS_is: $(DEV_HA_STAT)"
-row
-echo "TMM_CPU_USAGE: $(Tmm_cpu)"
-row
-echo "MEMORY_USAGE: $(MEMORY_USAGE)"
-row
+
+echo "BIGIP HA STAUTS is: $(DEV_HA_STAT)"
+echo "TMM CPU_USAGE:$(Tmm_cpu)"
+mem_usage=`MEMORY_USAGE`
+echo "MEMORY_USAGE:$mem_usage"
 echo $(Throughput)
-row
-echo -n "Power_supply_installed,Power_in_active: ";POWER_SUPPLY
+POWER_SUPPLY
 #CHASSIS_TEMPERATURE
-row
 CPU_TEMPERATURE
-row
 UPTIME
-row
 SYS_date
-row
 log_ltm
-row
 MGMT
-row
-
-#using different command get information for different bigip version
-soft_ver=$(SOFT_VER)
-
-bos=$(echo $soft_ver|awk '{print $1}')
-
-big_bos=${bos%.*}
-
-if [ "$big_bos" == "9.3" -o "$big_bos" == "9.1" ];then
-
-	row
-	echo -e "$red $big_s_bos has no command about snmp.$close"
-	row
-	syslog_setting
-	row
-	DEV_Acc_control
-	row
-	HA_feature
-	row
-	NET_failover
-	row
-	NEW_conn
-	row
-	ACT_Conn
-	row
-
-elif [ "$big_bos" == "9.4" ];then
-		SNMP_agent
-		row
-		SNMP_trap
-		row
-		syslog_setting
-		row
-		DEV_Acc_control
-		row
-		HA_feature
-		row
-		NET_failover
-		row
-		NEW_conn
-		row
-		ACT_Conn
-		row
-	 	
-elif [ "$big_bos" == "11.5" -o "$big_bos" == "11.4" ];then
-
-		SNMP_agent_tmsh
-		row
-		SNMP_trap_tmsh
-		row
-		syslog_setting_tmsh
-		row
-		DEV_Acc_control_tmsh
-		row
-		HA_feature_tmsh
-		row
-		NET_failover_tmsh
-		row
-		NEW_conn
-		row
-		ACT_Conn
-		row
-
-else
-		echo -e "$red BIGIP soft version is $bos,this script is not support! $close"
-		exit 99
-fi
-
-
-
-
+SNMP_agent
+SNMP_trap
+syslog_setting
+DEV_Acc_control
+HA_feature
+NET_failover
+NEW_conn
+ACT_Conn
